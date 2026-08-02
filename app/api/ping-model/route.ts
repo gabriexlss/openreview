@@ -4,20 +4,33 @@ import { cookies } from "next/headers";
 import { env } from "@/lib/env";
 
 async function pingOpenAI(apiKey: string, baseUrl: string, modelName: string) {
-  const res = await fetch(`${baseUrl}/chat/completions`, {
+  const url = baseUrl.replace(/\/+$/, ""); // remove trailing slashes
+  const res = await fetch(`${url}/chat/completions`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
       Authorization: `Bearer ${apiKey}`,
+      "HTTP-Referer": "https://openreview.vercel.app",
+      "X-Title": "OpenReview Bot",
     },
     body: JSON.stringify({
       model: modelName,
       messages: [{ role: "user", content: "Hello! Please reply with a short greeting." }],
     }),
   });
-  const data = await res.json();
-  if (data.error) throw new Error(data.error.message || JSON.stringify(data.error));
-  return data.choices[0].message.content;
+  
+  const text = await res.text();
+  let data;
+  try {
+    data = JSON.parse(text);
+  } catch (e) {
+    throw new Error(`Status ${res.status} | Invalid JSON from server:\n${text.substring(0, 500)}`);
+  }
+
+  if (!res.ok || data.error) {
+    throw new Error(`Status ${res.status} | Error:\n${JSON.stringify(data.error || data, null, 2)}`);
+  }
+  return data.choices?.[0]?.message?.content || JSON.stringify(data);
 }
 
 async function pingAnthropic(apiKey: string, modelName: string) {
@@ -34,9 +47,19 @@ async function pingAnthropic(apiKey: string, modelName: string) {
       messages: [{ role: "user", content: "Hello! Please reply with a short greeting." }],
     }),
   });
-  const data = await res.json();
-  if (data.error) throw new Error(data.error.message);
-  return data.content[0].text;
+  
+  const text = await res.text();
+  let data;
+  try {
+    data = JSON.parse(text);
+  } catch (e) {
+    throw new Error(`Status ${res.status} | Invalid JSON from server:\n${text.substring(0, 500)}`);
+  }
+
+  if (!res.ok || data.error) {
+    throw new Error(`Status ${res.status} | Error:\n${JSON.stringify(data.error || data, null, 2)}`);
+  }
+  return data.content?.[0]?.text || JSON.stringify(data);
 }
 
 export async function POST() {
