@@ -4,8 +4,8 @@ import { cookies } from "next/headers";
 import { env } from "@/lib/env";
 
 export async function GET() {
-  const auth = (await cookies()).get("auth_token")?.value;
-  if (!auth || auth !== env.DASHBOARD_PASSWORD) {
+  const isAuth = (await cookies()).get("auth")?.value === "true";
+  if (!isAuth) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
   const logs = await getLogs();

@@ -40,8 +40,8 @@ async function pingAnthropic(apiKey: string, modelName: string) {
 }
 
 export async function POST() {
-  const auth = (await cookies()).get("auth_token")?.value;
-  if (!auth || auth !== env.DASHBOARD_PASSWORD) {
+  const isAuth = (await cookies()).get("auth")?.value === "true";
+  if (!isAuth) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
