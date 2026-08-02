@@ -126,6 +126,7 @@ const initBot = async (): Promise<Chat> => {
   botInstance.onNewMention(handleMention);
 
   botInstance.onSubscribedMessage(async (thread, message) => {
+    await addLog("Message Parsed", 0, message.isMention ? "success" : "error", `Msg: ${message.text.substring(0,20)} | isMention: ${message.isMention}`);
     if (!message.isMention) {
       return;
     }

@@ -6,6 +6,11 @@ import { addLog } from "@/lib/logs";
 
 export const POST = async (request: NextRequest): Promise<NextResponse> => {
   try {
+    const eventType = request.headers.get("x-github-event") || "unknown";
+    if (eventType !== "ping") {
+      await addLog("Webhook Received", 0, "started", `Event: ${eventType}`);
+    }
+
     const bot = await getBot();
     const handler = bot.webhooks.github;
 
