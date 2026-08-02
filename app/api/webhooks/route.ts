@@ -24,13 +24,9 @@ export const POST = async (request: NextRequest): Promise<NextResponse> => {
       );
     }
 
-    const tasks: Promise<any>[] = [];
-    const response = await handler(request, {
-      waitUntil: (task) => tasks.push(task),
-    });
-    
-    await Promise.all(tasks);
-    return response as NextResponse;
+    return handler(request, {
+      waitUntil: (task) => after(() => task),
+    }) as Promise<NextResponse>;
   } catch (error: any) {
     console.error("Webhook fatal error:", error);
     await addLog("Webhook System", 0, "error", `Fatal Error: ${error.message}`);
