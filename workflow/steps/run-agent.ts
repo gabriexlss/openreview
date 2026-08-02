@@ -4,6 +4,7 @@ import { getWritable } from "workflow";
 import { createAgent } from "@/lib/agent";
 import { parseError } from "@/lib/error";
 import type { ThreadMessage } from "@/workflow";
+import type { AIConfig } from "@/lib/config-types";
 
 import { discoverSkills } from "./discover-skills";
 import { startTyping } from "./start-typing";
@@ -18,7 +19,8 @@ export const runAgent = async (
   threadMessages: ThreadMessage[],
   threadId: string,
   prNumber: number,
-  repoFullName: string
+  repoFullName: string,
+  config: AIConfig
 ): Promise<AgentResult> => {
   try {
     await startTyping(threadId, "Reviewing...");
@@ -30,7 +32,8 @@ export const runAgent = async (
       threadId,
       prNumber,
       repoFullName,
-      skills
+      skills,
+      config
     );
 
     await agent.stream({

@@ -10,6 +10,7 @@ import { start } from "workflow/api";
 import { env } from "@/lib/env";
 import { botWorkflow } from "@/workflow";
 import type { ThreadMessage, WorkflowParams } from "@/workflow";
+import { getAIConfig } from "@/lib/config";
 
 import { getAppInfo, getInstallationOctokit } from "./github";
 
@@ -66,6 +67,8 @@ const handleMention = async (thread: Thread, message: Message) => {
     repoFullName,
   } satisfies ThreadState);
 
+  const aiConfig = await getAIConfig();
+
   await start(botWorkflow, [
     {
       baseBranch: pr.base.ref,
@@ -74,6 +77,7 @@ const handleMention = async (thread: Thread, message: Message) => {
       prNumber,
       repoFullName,
       threadId: thread.id,
+      config: aiConfig,
     } satisfies WorkflowParams,
   ]);
 };
@@ -133,11 +137,14 @@ const initBot = async (): Promise<Chat> => {
 
     const messages = await collectMessages(event.thread);
 
+    const aiConfig = await getAIConfig();
+
     await start(botWorkflow, [
       {
         ...threadState,
         messages,
         threadId: event.thread.id,
+        config: aiConfig,
       } satisfies WorkflowParams,
     ]);
   });

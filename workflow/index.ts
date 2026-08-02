@@ -14,6 +14,8 @@ import { installDependencies } from "./steps/install-dependencies";
 import { runAgent } from "./steps/run-agent";
 import { stopSandbox } from "./steps/stop-sandbox";
 
+import type { AIConfig } from "@/lib/config-types";
+
 export interface ThreadMessage {
   content: string;
   role: "assistant" | "user";
@@ -26,6 +28,7 @@ export interface WorkflowParams {
   prNumber: number;
   repoFullName: string;
   threadId: string;
+  config: AIConfig;
 }
 
 export const botWorkflow = async (params: WorkflowParams): Promise<void> => {
@@ -38,6 +41,7 @@ export const botWorkflow = async (params: WorkflowParams): Promise<void> => {
     prNumber,
     repoFullName,
     threadId,
+    config,
   } = params;
 
   const pushAccess = await checkPushAccess(repoFullName, prBranch);
@@ -71,7 +75,8 @@ Please ensure the OpenReview app has access to this repository and branch.
       messages,
       threadId,
       prNumber,
-      repoFullName
+      repoFullName,
+      config
     );
 
     if (!agentResult.success) {

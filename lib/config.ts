@@ -1,13 +1,7 @@
 import { readFile, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import { existsSync } from "node:fs";
-
-export interface AIConfig {
-  provider: "anthropic" | "openrouter" | "custom";
-  apiKey: string;
-  baseUrl: string;
-  modelName: string;
-}
+import type { AIConfig } from "./config-types";
 
 const configPath = join(process.cwd(), "data", "ai-config.json");
 

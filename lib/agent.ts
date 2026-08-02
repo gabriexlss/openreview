@@ -63,14 +63,15 @@ Based on the user's request, decide what to do. Your capabilities include:
 
 import { createOpenAI } from "@ai-sdk/openai";
 import { createAnthropic } from "@ai-sdk/anthropic";
-import { getAIConfig } from "@/lib/config";
+import type { AIConfig } from "@/lib/config-types";
 
 export const createAgent = async (
   sandboxId: string,
   threadId: string,
   prNumber: number,
   repoFullName: string,
-  skills: SkillMetadata[]
+  skills: SkillMetadata[],
+  config: AIConfig
 ) => {
   const skillsPrompt = buildSkillsPrompt(skills);
   const system = [
@@ -81,8 +82,6 @@ export const createAgent = async (
   ]
     .filter(Boolean)
     .join("\n\n");
-
-  const config = await getAIConfig();
   
   let model;
   if (config.provider === "openrouter" || config.provider === "custom") {

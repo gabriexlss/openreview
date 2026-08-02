@@ -1,6 +1,6 @@
 "use client";
 import { useState } from "react";
-import type { AIConfig } from "@/lib/config";
+import type { AIConfig } from "@/lib/config-types";
 
 export function Dashboard({ initialConfig }: { initialConfig: AIConfig }) {
   const [config, setConfig] = useState<AIConfig>(initialConfig);
