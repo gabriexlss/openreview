@@ -100,7 +100,8 @@ export const createAgent = async (
   }
 
   return new DurableAgent({
-    model,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    model: model as any,
     system,
     tools: {
       bash: createBashTool(sandboxId),
