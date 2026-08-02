@@ -13,6 +13,7 @@ import type { ThreadMessage, WorkflowParams } from "@/workflow";
 import { getAIConfig } from "@/lib/config";
 
 import { getAppInfo, getInstallationOctokit } from "./github";
+import { addLog, updateLog } from "./logs";
 
 const collectMessages = async (
   thread: Thread<unknown, unknown>
@@ -68,18 +69,26 @@ const handleMention = async (thread: Thread, message: Message) => {
   } satisfies ThreadState);
 
   const aiConfig = await getAIConfig();
+  
+  const logId = await addLog(repoFullName, prNumber, "started", "Review requested via mention");
 
-  await start(botWorkflow, [
-    {
-      baseBranch: pr.base.ref,
-      messages,
-      prBranch: pr.head.ref,
-      prNumber,
-      repoFullName,
-      threadId: thread.id,
-      config: aiConfig,
-    } satisfies WorkflowParams,
-  ]);
+  try {
+    await start(botWorkflow, [
+      {
+        baseBranch: pr.base.ref,
+        messages,
+        prBranch: pr.head.ref,
+        prNumber,
+        repoFullName,
+        threadId: thread.id,
+        config: aiConfig,
+      } satisfies WorkflowParams,
+    ]);
+    if (logId) await updateLog(logId, "success", "Workflow started successfully");
+  } catch (error: any) {
+    console.error("Workflow failed to start:", error);
+    if (logId) await updateLog(logId, "error", error.message || "Failed to start workflow");
+  }
 };
 
 const initBot = async (): Promise<Chat> => {
@@ -138,15 +147,22 @@ const initBot = async (): Promise<Chat> => {
     const messages = await collectMessages(event.thread);
 
     const aiConfig = await getAIConfig();
+    
+    const logId = await addLog(threadState.repoFullName, threadState.prNumber, "started", "Review requested via reaction");
 
-    await start(botWorkflow, [
-      {
-        ...threadState,
-        messages,
-        threadId: event.thread.id,
-        config: aiConfig,
-      } satisfies WorkflowParams,
-    ]);
+    try {
+      await start(botWorkflow, [
+        {
+          ...threadState,
+          messages,
+          threadId: event.thread.id,
+          config: aiConfig,
+        } satisfies WorkflowParams,
+      ]);
+      if (logId) await updateLog(logId, "success", "Workflow started successfully");
+    } catch (error: any) {
+      if (logId) await updateLog(logId, "error", error.message || "Failed to start workflow");
+    }
   });
 
   botInstance.onReaction([emoji.thumbs_down, emoji.confused], async (event) => {
