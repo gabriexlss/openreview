@@ -42,14 +42,14 @@ export async function POST(req: Request) {
         prBranch: pr.head.ref,
         prNumber: Number(prNumber),
         repoFullName,
-        threadId: `manual-${repoFullName}-${prNumber}-${Date.now()}`,
+        threadId: pr.node_id,
         config: aiConfig,
       } satisfies WorkflowParams,
     ]);
     
-    if (logId) await updateLog(logId, "success", `Workflow started successfully. ID: ${workflowResult.id}`);
+    if (logId) await updateLog(logId, "success", `Workflow started successfully. ID: ${workflowResult.workflowRunId}`);
     
-    return NextResponse.json({ success: true, workflowId: workflowResult.id });
+    return NextResponse.json({ success: true, workflowId: workflowResult.workflowRunId });
   } catch (err: any) {
     return NextResponse.json({ error: err.message }, { status: 500 });
   }
