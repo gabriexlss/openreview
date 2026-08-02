@@ -48,5 +48,5 @@ export const getAppInfo = async (): Promise<{
     username: `${appData.slug}[bot]`,
   });
 
-  return { botUserId: botUser.id, slug: appData.slug };
+  return { botUserId: Number(botUser.id), slug: appData.slug };
 };
