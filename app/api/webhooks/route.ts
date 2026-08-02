@@ -8,7 +8,10 @@ export const POST = async (request: NextRequest): Promise<NextResponse> => {
   try {
     const eventType = request.headers.get("x-github-event") || "unknown";
     if (eventType !== "ping") {
-      await addLog("Webhook Received", 0, "started", `Event: ${eventType}`);
+      const clonedReq = request.clone();
+      const body = await clonedReq.json();
+      const instId = body?.installation?.id || "N/A";
+      await addLog("Webhook Received", 0, "started", `Event: ${eventType} | Install ID: ${instId}`);
     }
 
     const bot = await getBot();
