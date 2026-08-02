@@ -4,8 +4,11 @@ import { cookies } from "next/headers";
 import { env } from "@/lib/env";
 
 async function pingOpenAI(apiKey: string, baseUrl: string, modelName: string) {
-  const url = baseUrl.replace(/\/+$/, ""); // remove trailing slashes
-  const res = await fetch(`${url}/chat/completions`, {
+  let url = baseUrl.replace(/\/+$/, ""); // remove trailing slashes
+  if (!url.endsWith("/chat/completions")) {
+    url = `${url}/chat/completions`;
+  }
+  const res = await fetch(url, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",

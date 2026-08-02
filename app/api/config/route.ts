@@ -20,6 +20,9 @@ export async function POST(request: Request) {
 
   try {
     const config = await request.json();
+    if (config.baseUrl) {
+      config.baseUrl = config.baseUrl.replace(/\/chat\/completions\/?$/, "").replace(/\/+$/, "");
+    }
     await saveAIConfig(config);
     return NextResponse.json({ success: true });
   } catch (err) {
