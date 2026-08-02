@@ -25,7 +25,7 @@ export const runAgent = async (
 
     const skills = await discoverSkills([".agents/skills"]);
 
-    const agent = createAgent(
+    const agent = await createAgent(
       sandboxId,
       threadId,
       prNumber,

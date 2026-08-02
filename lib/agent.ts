@@ -61,7 +61,11 @@ Based on the user's request, decide what to do. Your capabilities include:
 ## Getting Started
 - Start by running \`gh pr diff {{PR_NUMBER}}\` to see what changed in this PR`;
 
-export const createAgent = (
+import { createOpenAI } from "@ai-sdk/openai";
+import { createAnthropic } from "@ai-sdk/anthropic";
+import { getAIConfig } from "@/lib/config";
+
+export const createAgent = async (
   sandboxId: string,
   threadId: string,
   prNumber: number,
@@ -78,8 +82,26 @@ export const createAgent = (
     .filter(Boolean)
     .join("\n\n");
 
+  const config = await getAIConfig();
+  
+  let model;
+  if (config.provider === "openrouter" || config.provider === "custom") {
+    const custom = createOpenAI({
+      baseURL: config.baseUrl || "https://openrouter.ai/api/v1",
+      apiKey: config.apiKey,
+    });
+    model = custom(config.modelName || "openai/gpt-4o");
+  } else if (config.provider === "anthropic" && config.apiKey) {
+    const anthropic = createAnthropic({
+      apiKey: config.apiKey,
+    });
+    model = anthropic(config.modelName || "claude-3-7-sonnet-20250219");
+  } else {
+    model = config.modelName || "anthropic/claude-sonnet-4.6";
+  }
+
   return new DurableAgent({
-    model: "anthropic/claude-sonnet-4.6",
+    model,
     system,
     tools: {
       bash: createBashTool(sandboxId),

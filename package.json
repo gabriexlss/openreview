@@ -10,6 +10,8 @@
     "fix": "ultracite fix"
   },
   "dependencies": {
+    "@ai-sdk/anthropic": "^4.0.27",
+    "@ai-sdk/openai": "^4.0.27",
     "@chat-adapter/github": "^4.15.0",
     "@chat-adapter/state-memory": "^4.15.0",
     "@chat-adapter/state-redis": "^4.15.0",
