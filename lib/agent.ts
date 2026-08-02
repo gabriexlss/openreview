@@ -1,4 +1,5 @@
 import { DurableAgent } from "@workflow/ai/agent";
+import type { AIConfig } from "@/lib/config-types";
 
 import type { SkillMetadata } from "@/lib/skills";
 import { buildSkillsPrompt } from "@/lib/skills";
@@ -61,10 +62,6 @@ Based on the user's request, decide what to do. Your capabilities include:
 ## Getting Started
 - Start by running \`gh pr diff {{PR_NUMBER}}\` to see what changed in this PR`;
 
-import { createOpenAI } from "@ai-sdk/openai";
-import { createAnthropic } from "@ai-sdk/anthropic";
-import type { AIConfig } from "@/lib/config-types";
-
 export const createAgent = async (
   sandboxId: string,
   threadId: string,
@@ -83,25 +80,22 @@ export const createAgent = async (
     .filter(Boolean)
     .join("\n\n");
   
-  let model;
   if (config.provider === "openrouter" || config.provider === "custom") {
-    const custom = createOpenAI({
-      baseURL: config.baseUrl || "https://openrouter.ai/api/v1",
-      apiKey: config.apiKey,
-    });
-    model = custom(config.modelName || "openai/gpt-4o");
+    process.env.OPENAI_API_KEY = config.apiKey;
+    if (config.baseUrl) {
+      process.env.OPENAI_BASE_URL = config.baseUrl;
+    } else if (config.provider === "openrouter") {
+      process.env.OPENAI_BASE_URL = "https://openrouter.ai/api/v1";
+    }
   } else if (config.provider === "anthropic" && config.apiKey) {
-    const anthropic = createAnthropic({
-      apiKey: config.apiKey,
-    });
-    model = anthropic(config.modelName || "claude-3-7-sonnet-20250219");
-  } else {
-    model = config.modelName || "anthropic/claude-sonnet-4.6";
+    process.env.ANTHROPIC_API_KEY = config.apiKey;
   }
+
+  const modelStr = config.modelName || "anthropic/claude-sonnet-4.6";
 
   return new DurableAgent({
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    model: model as any,
+    model: modelStr as any,
     system,
     tools: {
       bash: createBashTool(sandboxId),
