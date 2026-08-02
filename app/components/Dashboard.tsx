@@ -188,6 +188,9 @@ export function Dashboard({ initialConfig }: { initialConfig: AIConfig }) {
                       placeholder="https://openrouter.ai/api/v1"
                       className="w-full px-4 py-3 rounded-xl bg-black/40 border border-white/10 text-white placeholder-zinc-600 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 transition-all"
                     />
+                    <p className="text-xs text-zinc-500 ml-1">
+                      Dica: Use <span className="font-mono text-zinc-400">https://openrouter.ai/api/v1</span> (sem o /chat/completions no final)
+                    </p>
                   </div>
                 )}
                 <div className="pt-4 flex items-center justify-between">
