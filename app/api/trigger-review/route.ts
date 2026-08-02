@@ -22,10 +22,6 @@ export async function POST(req: Request) {
   try {
     const octokit = await getInstallationOctokit();
     
-    if (!process.env.QSTASH_TOKEN) {
-      return NextResponse.json({ error: "Upstash QSTASH_TOKEN is missing in Vercel environment variables. Workflows cannot run in production without it." }, { status: 500 });
-    }
-
     const { data: pr } = await octokit.rest.pulls.get({
       owner,
       pull_number: Number(prNumber),
