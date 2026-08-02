@@ -1,7 +1,11 @@
 import { NextResponse } from "next/server";
-import { getInstallationOctokit, getAppInfo } from "@/lib/github";
+import { getInstallationOctokit } from "@/lib/github";
 import { cookies } from "next/headers";
-import { env } from "@/lib/env";
+import { start } from "workflow/api";
+import { botWorkflow } from "@/workflow";
+import type { WorkflowParams } from "@/workflow";
+import { getAIConfig } from "@/lib/config";
+import { addLog, updateLog } from "@/lib/logs";
 
 export async function POST(req: Request) {
   const isAuth = (await cookies()).get("auth")?.value === "true";
@@ -17,13 +21,30 @@ export async function POST(req: Request) {
 
   try {
     const octokit = await getInstallationOctokit();
-    const appInfo = await getAppInfo();
-    await octokit.rest.issues.createComment({
+    
+    const { data: pr } = await octokit.rest.pulls.get({
       owner,
+      pull_number: Number(prNumber),
       repo,
-      issue_number: Number(prNumber),
-      body: `@${appInfo.slug} please review this PR`,
     });
+
+    const aiConfig = await getAIConfig();
+    const logId = await addLog(repoFullName, Number(prNumber), "started", "Review requested manually via dashboard");
+    
+    await start(botWorkflow, [
+      {
+        baseBranch: pr.base.ref,
+        messages: [{ role: "user", content: "Please review this PR." }],
+        prBranch: pr.head.ref,
+        prNumber: Number(prNumber),
+        repoFullName,
+        threadId: `manual-${repoFullName}-${prNumber}-${Date.now()}`,
+        config: aiConfig,
+      } satisfies WorkflowParams,
+    ]);
+    
+    if (logId) await updateLog(logId, "success", "Workflow started successfully");
+    
     return NextResponse.json({ success: true });
   } catch (err: any) {
     return NextResponse.json({ error: err.message }, { status: 500 });
