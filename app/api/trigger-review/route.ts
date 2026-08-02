@@ -35,7 +35,7 @@ export async function POST(req: Request) {
     const aiConfig = await getAIConfig();
     const logId = await addLog(repoFullName, Number(prNumber), "started", "Review requested manually via dashboard");
     
-    await start(botWorkflow, [
+    const workflowResult = await start(botWorkflow, [
       {
         baseBranch: pr.base.ref,
         messages: [{ role: "user", content: "Please review this PR." }],
@@ -47,9 +47,9 @@ export async function POST(req: Request) {
       } satisfies WorkflowParams,
     ]);
     
-    if (logId) await updateLog(logId, "success", "Workflow started successfully");
+    if (logId) await updateLog(logId, "success", `Workflow started successfully. ID: ${workflowResult.id}`);
     
-    return NextResponse.json({ success: true });
+    return NextResponse.json({ success: true, workflowId: workflowResult.id });
   } catch (err: any) {
     return NextResponse.json({ error: err.message }, { status: 500 });
   }
