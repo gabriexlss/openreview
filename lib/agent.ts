@@ -1,5 +1,6 @@
 import { DurableAgent } from "@workflow/ai/agent";
 import type { AIConfig } from "@/lib/config-types";
+import { getModel } from "./model-step";
 
 import type { SkillMetadata } from "@/lib/skills";
 import { buildSkillsPrompt } from "@/lib/skills";
@@ -79,34 +80,10 @@ export const createAgent = async (
   ]
     .filter(Boolean)
     .join("\n\n");
-  
-  if (config.provider === "openrouter" || config.provider === "custom") {
-    process.env.OPENAI_API_KEY = config.apiKey;
-    if (config.baseUrl) {
-      process.env.OPENAI_BASE_URL = config.baseUrl;
-    } else if (config.provider === "openrouter") {
-      process.env.OPENAI_BASE_URL = "https://openrouter.ai/api/v1";
-    }
-  } else if (config.provider === "anthropic" && config.apiKey) {
-    process.env.ANTHROPIC_API_KEY = config.apiKey;
-  }
-
-  let modelStr = config.modelName;
-  if (config.provider === "openrouter" || config.provider === "custom") {
-    if (!modelStr) modelStr = "gpt-4o-mini";
-    if (!modelStr.startsWith("openai:")) {
-      modelStr = `openai:${modelStr}`;
-    }
-  } else {
-    if (!modelStr) modelStr = "claude-3-5-sonnet-latest";
-    if (!modelStr.startsWith("anthropic:")) {
-      modelStr = `anthropic:${modelStr}`;
-    }
-  }
 
   return new DurableAgent({
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    model: modelStr as any,
+    model: getModel(config) as any,
     system,
     tools: {
       bash: createBashTool(sandboxId),
