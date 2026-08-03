@@ -47,9 +47,9 @@ export async function POST(req: Request) {
       } satisfies WorkflowParams,
     ]);
     
-    if (logId) await updateLog(logId, "success", `Workflow started successfully. ID: ${workflowResult.workflowRunId}`);
+    if (logId) await updateLog(logId, "success", "Workflow started successfully");
     
-    return NextResponse.json({ success: true, workflowId: workflowResult.workflowRunId });
+    return NextResponse.json({ success: true });
   } catch (err: any) {
     return NextResponse.json({ error: err.message }, { status: 500 });
   }
