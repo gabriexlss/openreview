@@ -1,6 +1,4 @@
 import { DurableAgent } from "@workflow/ai/agent";
-import { createOpenAI } from "@ai-sdk/openai";
-import { createAnthropic } from "@ai-sdk/anthropic";
 import type { AIConfig } from "@/lib/config-types";
 
 import type { SkillMetadata } from "@/lib/skills";
@@ -82,26 +80,33 @@ export const createAgent = async (
     .filter(Boolean)
     .join("\n\n");
   
-  let providerModel: any;
-
   if (config.provider === "openrouter" || config.provider === "custom") {
-    const openai = createOpenAI({
-      apiKey: config.apiKey,
-      baseURL: config.baseUrl || (config.provider === "openrouter" ? "https://openrouter.ai/api/v1" : undefined),
-    });
-    providerModel = openai(config.modelName || "gpt-4o-mini");
+    process.env.OPENAI_API_KEY = config.apiKey;
+    if (config.baseUrl) {
+      process.env.OPENAI_BASE_URL = config.baseUrl;
+    } else if (config.provider === "openrouter") {
+      process.env.OPENAI_BASE_URL = "https://openrouter.ai/api/v1";
+    }
   } else if (config.provider === "anthropic" && config.apiKey) {
-    const anthropic = createAnthropic({
-      apiKey: config.apiKey,
-    });
-    providerModel = anthropic(config.modelName || "claude-3-5-sonnet-latest");
+    process.env.ANTHROPIC_API_KEY = config.apiKey;
+  }
+
+  let modelStr = config.modelName;
+  if (config.provider === "openrouter" || config.provider === "custom") {
+    if (!modelStr) modelStr = "gpt-4o-mini";
+    if (!modelStr.startsWith("openai:")) {
+      modelStr = `openai:${modelStr}`;
+    }
   } else {
-    providerModel = config.modelName || "anthropic/claude-sonnet-4.6";
+    if (!modelStr) modelStr = "claude-3-5-sonnet-latest";
+    if (!modelStr.startsWith("anthropic:")) {
+      modelStr = `anthropic:${modelStr}`;
+    }
   }
 
   return new DurableAgent({
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    model: providerModel,
+    model: modelStr as any,
     system,
     tools: {
       bash: createBashTool(sandboxId),
